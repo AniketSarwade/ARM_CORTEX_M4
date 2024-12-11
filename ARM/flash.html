@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash Programming in ARM Cortex-M4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+        }
+        nav {
+            width: 20%;
+            background-color: #283593;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+        }
+        nav h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        nav ul li {
+            margin-bottom: 10px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+        main {
+            margin-left: 20%;
+            padding: 20px;
+            width: 80%;
+        }
+        section {
+            margin-bottom: 40px;
+        }
+        h1, h2 {
+            color: #283593;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h2>Topics</h2>
+        <ul>
+            <li><a href="#intro">Introduction</a></li>
+            <li><a href="#flash-architecture">Flash Memory Architecture</a></li>
+            <li><a href="#flash-commands">Flash Programming Commands</a></li>
+            <li><a href="#example">Flash Programming Example</a></li>
+            <li><a href="#best-practices">Best Practices</a></li>
+        </ul>
+    </nav>
+    <main>
+        <section id="intro">
+            <h1>Introduction</h1>
+            <p>Flash memory is a type of non-volatile storage used to store the firmware and application code in embedded systems, including ARM Cortex-M4 microcontrollers. This document provides a deep dive into the concepts, architecture, and techniques for programming flash memory.</p>
+        </section>
+
+        <section id="flash-architecture">
+            <h2>Flash Memory Architecture</h2>
+            <p>Flash memory in ARM Cortex-M4 microcontrollers is divided into sectors or pages. Each sector can be individually erased and programmed.</p>
+            <ul>
+                <li><strong>Address Range:</strong> Flash memory typically starts at a fixed address, like 0x08000000.</li>
+                <li><strong>Sector Size:</strong> Flash is organized into sectors of varying sizes, e.g., 16 KB, 64 KB, or 128 KB.</li>
+                <li><strong>Erase Cycle:</strong> A sector must be erased before it can be reprogrammed.</li>
+            </ul>
+        </section>
+
+        <section id="flash-commands">
+            <h2>Flash Programming Commands</h2>
+            <p>ARM Cortex-M4 flash programming involves specific commands sent to the flash controller.</p>
+            <ul>
+                <li><strong>Unlock Flash:</strong> Before programming, the flash memory must be unlocked.</li>
+                <li><strong>Erase Sector:</strong> Use a sector erase command to prepare the memory.</li>
+                <li><strong>Program Word:</strong> Write data to flash one word (4 bytes) at a time.</li>
+                <li><strong>Lock Flash:</strong> After programming, lock the flash to prevent accidental writes.</li>
+            </ul>
+            <pre><code>
+// Example: Flash Unlock and Lock
+FLASH->KEYR = 0x45670123; // Unlock key 1
+FLASH->KEYR = 0xCDEF89AB; // Unlock key 2
+FLASH->CR |= FLASH_CR_LOCK; // Lock the flash
+            </code></pre>
+        </section>
+
+        <section id="example">
+            <h2>Flash Programming Example</h2>
+            <p>The following example demonstrates how to erase a sector and program data into flash memory.</p>
+            <pre><code>
+// Flash Programming Example
+#define FLASH_BASE_ADDR 0x08000000
+#define FLASH_SECTOR_2  2
+
+// Erase Sector
+FLASH->CR |= FLASH_CR_SER; // Enable sector erase
+FLASH->CR |= (FLASH_SECTOR_2 << FLASH_CR_SNB_Pos); // Select sector
+FLASH->CR |= FLASH_CR_STRT; // Start erase operation
+while (FLASH->SR & FLASH_SR_BSY); // Wait for completion
+
+// Program Word
+uint32_t* flashAddr = (uint32_t*)(FLASH_BASE_ADDR + 0x2000); // Sector 2 offset
+FLASH->CR |= FLASH_CR_PG; // Enable programming
+*flashAddr = 0x12345678; // Write data
+while (FLASH->SR & FLASH_SR_BSY); // Wait for completion
+
+FLASH->CR &= ~FLASH_CR_PG; // Disable programming
+            </code></pre>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices</h2>
+            <ul>
+                <li>Always verify written data using a read-back mechanism.</li>
+                <li>Ensure flash operations are not interrupted, especially in real-time systems.</li>
+                <li>Minimize erase cycles to extend flash memory lifespan.</li>
+                <li>Use error-correction codes (ECC) if supported by the hardware.</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>
